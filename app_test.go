@@ -123,9 +123,9 @@ func ExampleApp_Run_bashComplete() {
 	os.Args = []string{"greet", "--generate-bash-completion"}
 
 	app := &App{
-		EnableBashCompletion: true,
 		Command: Command{
-			Name: "greet",
+			Name:                 "greet",
+			EnableBashCompletion: true,
 			Subcommands: []*Command{
 				{
 					Name:        "describeit",
@@ -759,12 +759,12 @@ func TestApp_OrderOfOperations(t *testing.T) {
 	resetCounts := func() { counts = &opCounts{} }
 
 	app := &App{
-		EnableBashCompletion: true,
-		BashComplete: func(c *Context) {
-			counts.Total++
-			counts.BashComplete = counts.Total
-		},
 		Command: Command{
+			EnableBashCompletion: true,
+			BashComplete: func(c *Context) {
+				counts.Total++
+				counts.BashComplete = counts.Total
+			},
 			OnUsageError: func(c *Context, err error, isSubcommand bool) error {
 				counts.Total++
 				counts.OnUsageError = counts.Total

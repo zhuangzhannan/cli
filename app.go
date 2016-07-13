@@ -17,12 +17,8 @@ type App struct {
 	Version string
 	// Boolean to hide built-in version flag and the VERSION section of help
 	HideVersion bool
-	// Boolean to enable bash completion commands
-	EnableBashCompletion bool
 	// Categories contains the categorized commands and is populated on app startup
 	Categories CommandCategories
-	// An action to execute when the bash-completion flag is set
-	BashComplete BashCompleteFunc
 	// Execute this function if the proper command cannot be found
 	CommandNotFound CommandNotFoundFunc
 	// Compilation date

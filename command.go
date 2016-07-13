@@ -23,6 +23,8 @@ type Command struct {
 	ArgsUsage string
 	// The category the command is part of
 	Category string
+	// Boolean to enable bash completion commands
+	EnableBashCompletion bool
 	// The function to call when checking for bash command completions
 	BashComplete BashCompleteFunc
 	// An action to execute before any sub-subcommands are run, but after the context is ready
