@@ -33,6 +33,8 @@ type Command struct {
 	// An action to execute after any subcommands are run, but after the subcommand has finished
 	// It is run even if Action() panics
 	After AfterFunc
+	// Execute this function if the proper command cannot be found
+	CommandNotFound CommandNotFoundFunc
 	// The function to call when this command is invoked
 	Action ActionFunc
 	// Execute this function if a usage error occurs.

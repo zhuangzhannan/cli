@@ -728,11 +728,11 @@ func TestApp_VersionPrinter(t *testing.T) {
 func TestApp_CommandNotFound(t *testing.T) {
 	counts := &opCounts{}
 	app := &App{
-		CommandNotFound: func(c *Context, command string) {
-			counts.Total++
-			counts.CommandNotFound = counts.Total
-		},
 		Command: Command{
+			CommandNotFound: func(c *Context, command string) {
+				counts.Total++
+				counts.CommandNotFound = counts.Total
+			},
 			Subcommands: []*Command{
 				{
 					Name: "bar",

@@ -19,8 +19,6 @@ type App struct {
 	HideVersion bool
 	// Categories contains the categorized commands and is populated on app startup
 	Categories CommandCategories
-	// Execute this function if the proper command cannot be found
-	CommandNotFound CommandNotFoundFunc
 	// Compilation date
 	Compiled time.Time
 	// List of all authors who contributed
