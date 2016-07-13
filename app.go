@@ -13,44 +13,18 @@ import (
 
 // App is the main structure of a cli application.
 type App struct {
-	// The name of the program. Defaults to path.Base(os.Args[0])
-	Name string
-	// Full name of command for help, defaults to Name
-	HelpName string
 	// Description of the program.
-	Usage string
-	// Text to override the USAGE section of help
-	UsageText string
-	// Description of the program argument format.
-	ArgsUsage string
-	// Version of the program
 	Version string
-	// List of commands to execute
-	Commands []*Command
-	// List of flags to parse
-	Flags []Flag
-	// Boolean to enable bash completion commands
-	EnableBashCompletion bool
-	// Boolean to hide built-in help command
-	HideHelp bool
 	// Boolean to hide built-in version flag and the VERSION section of help
 	HideVersion bool
+	// Boolean to enable bash completion commands
+	EnableBashCompletion bool
 	// Categories contains the categorized commands and is populated on app startup
 	Categories CommandCategories
 	// An action to execute when the bash-completion flag is set
 	BashComplete BashCompleteFunc
-	// An action to execute before any subcommands are run, but after the context is ready
-	// If a non-nil error is returned, no subcommands are run
-	Before BeforeFunc
-	// An action to execute after any subcommands are run, but after the subcommand has finished
-	// It is run even if Action() panics
-	After AfterFunc
-	// The action to execute when no subcommands are specified
-	Action ActionFunc
 	// Execute this function if the proper command cannot be found
 	CommandNotFound CommandNotFoundFunc
-	// Execute this function if an usage error occurs
-	OnUsageError OnUsageErrorFunc
 	// Compilation date
 	Compiled time.Time
 	// List of all authors who contributed
@@ -63,6 +37,8 @@ type App struct {
 	ErrWriter io.Writer
 	// Other custom info
 	Metadata map[string]interface{}
+
+	Command
 
 	didSetup bool
 }
@@ -120,15 +96,15 @@ func (a *App) Setup() {
 	}
 
 	newCmds := []*Command{}
-	for _, c := range a.Commands {
+	for _, c := range a.Subcommands {
 		if c.HelpName == "" {
 			c.HelpName = fmt.Sprintf("%s %s", a.HelpName, c.Name)
 		}
 		newCmds = append(newCmds, c)
 	}
-	a.Commands = newCmds
+	a.Subcommands = newCmds
 
-	if a.Command(helpCommand.Name) == nil && !a.HideHelp {
+	if a.Subcommand(helpCommand.Name) == nil && !a.HideHelp {
 		a.appendCommand(helpCommand)
 
 		if HelpFlag != nil {
@@ -145,7 +121,7 @@ func (a *App) Setup() {
 	}
 
 	a.Categories = newCommandCategories()
-	for _, command := range a.Commands {
+	for _, command := range a.Subcommands {
 		a.Categories.AddCommand(command.Category, command)
 	}
 	sort.Sort(a.Categories.(*commandCategories))
@@ -219,7 +195,7 @@ func (a *App) Run(arguments []string) (err error) {
 	args := context.Args()
 	if args.Present() {
 		name := args.First()
-		c := a.Command(name)
+		c := a.Subcommand(name)
 		if c != nil {
 			return c.Run(context)
 		}
@@ -236,8 +212,8 @@ func (a *App) Run(arguments []string) (err error) {
 // generate command-specific flags
 func (a *App) RunAsSubcommand(ctx *Context) (err error) {
 	// append help to commands
-	if len(a.Commands) > 0 {
-		if a.Command(helpCommand.Name) == nil && !a.HideHelp {
+	if len(a.Subcommands) > 0 {
+		if a.Subcommand(helpCommand.Name) == nil && !a.HideHelp {
 			a.appendCommand(helpCommand)
 
 			if HelpFlag != nil {
@@ -247,13 +223,13 @@ func (a *App) RunAsSubcommand(ctx *Context) (err error) {
 	}
 
 	newCmds := []*Command{}
-	for _, c := range a.Commands {
+	for _, c := range a.Subcommands {
 		if c.HelpName == "" {
 			c.HelpName = fmt.Sprintf("%s %s", a.HelpName, c.Name)
 		}
 		newCmds = append(newCmds, c)
 	}
-	a.Commands = newCmds
+	a.Subcommands = newCmds
 
 	// append flags
 	if a.EnableBashCompletion {
@@ -270,7 +246,7 @@ func (a *App) RunAsSubcommand(ctx *Context) (err error) {
 	if nerr != nil {
 		fmt.Fprintln(a.Writer, nerr)
 		fmt.Fprintln(a.Writer)
-		if len(a.Commands) > 0 {
+		if len(a.Subcommands) > 0 {
 			ShowSubcommandHelp(context)
 		} else {
 			ShowCommandHelp(ctx, context.Args().First())
@@ -293,7 +269,7 @@ func (a *App) RunAsSubcommand(ctx *Context) (err error) {
 		return err
 	}
 
-	if len(a.Commands) > 0 {
+	if len(a.Subcommands) > 0 {
 		if checkSubcommandHelp(context) {
 			return nil
 		}
@@ -329,7 +305,7 @@ func (a *App) RunAsSubcommand(ctx *Context) (err error) {
 	args := context.Args()
 	if args.Present() {
 		name := args.First()
-		c := a.Command(name)
+		c := a.Subcommand(name)
 		if c != nil {
 			return c.Run(context)
 		}
@@ -343,8 +319,8 @@ func (a *App) RunAsSubcommand(ctx *Context) (err error) {
 }
 
 // Command returns the named command on App. Returns nil if the command does not exist
-func (a *App) Command(name string) *Command {
-	for _, c := range a.Commands {
+func (a *App) Subcommand(name string) *Command {
+	for _, c := range a.Subcommands {
 		if c.HasName(name) {
 			return c
 		}
@@ -373,7 +349,7 @@ func (a *App) VisibleCategories() []CommandCategory {
 // VisibleCommands returns a slice of the Commands with Hidden=false
 func (a *App) VisibleCommands() []*Command {
 	ret := []*Command{}
-	for _, command := range a.Commands {
+	for _, command := range a.Subcommands {
 		if !command.Hidden {
 			ret = append(ret, command)
 		}
@@ -413,8 +389,8 @@ func (a *App) appendFlag(fl Flag) {
 }
 
 func (a *App) appendCommand(c *Command) {
-	if !hasCommand(a.Commands, c) {
-		a.Commands = append(a.Commands, c)
+	if !hasCommand(a.Subcommands, c) {
+		a.Subcommands = append(a.Subcommands, c)
 	}
 }
 

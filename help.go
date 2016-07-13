@@ -16,7 +16,7 @@ var AppHelpTemplate = `NAME:
    {{.Name}} - {{.Usage}}
 
 USAGE:
-   {{if .UsageText}}{{.UsageText}}{{else}}{{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}{{end}}
+   {{if .UsageText}}{{.UsageText}}{{else}}{{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Subcommands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}{{end}}
    {{if .Version}}{{if not .HideVersion}}
 VERSION:
    {{.Version}}
@@ -124,7 +124,7 @@ func ShowAppHelp(c *Context) error {
 
 // DefaultAppComplete prints the list of subcommands as the default app completion method
 func DefaultAppComplete(c *Context) {
-	for _, command := range c.App.Commands {
+	for _, command := range c.App.Subcommands {
 		if command.Hidden {
 			continue
 		}
@@ -142,7 +142,7 @@ func ShowCommandHelp(ctx *Context, command string) error {
 		return nil
 	}
 
-	for _, c := range ctx.App.Commands {
+	for _, c := range ctx.App.Subcommands {
 		if c.HasName(command) {
 			HelpPrinter(ctx.App.Writer, CommandHelpTemplate, c)
 			return nil
@@ -189,7 +189,7 @@ func ShowCompletions(c *Context) {
 
 // ShowCommandCompletions prints the custom completions for a given command
 func ShowCommandCompletions(ctx *Context, command string) {
-	c := ctx.App.Command(command)
+	c := ctx.App.Subcommand(command)
 	if c != nil && c.BashComplete != nil {
 		c.BashComplete(ctx)
 	}

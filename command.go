@@ -166,7 +166,7 @@ func (c *Command) HasName(name string) bool {
 func (c *Command) startApp(ctx *Context) error {
 	app := &App{
 		Metadata: ctx.App.Metadata,
-		Name:     fmt.Sprintf("%s %s", ctx.App.Name, c.Name),
+		Command:  Command{Name: fmt.Sprintf("%s %s", ctx.App.Name, c.Name)},
 	}
 
 	if c.HelpName == "" {
@@ -185,7 +185,7 @@ func (c *Command) startApp(ctx *Context) error {
 	app.CommandNotFound = ctx.App.CommandNotFound
 
 	// set the flags and commands
-	app.Commands = c.Subcommands
+	app.Subcommands = c.Subcommands
 	app.Flags = c.Flags
 	app.HideHelp = c.HideHelp
 
@@ -216,8 +216,8 @@ func (c *Command) startApp(ctx *Context) error {
 		app.Action = helpSubcommand.Action
 	}
 
-	for index, cc := range app.Commands {
-		app.Commands[index].commandNamePath = []string{c.Name, cc.Name}
+	for index, cc := range app.Subcommands {
+		app.Subcommands[index].commandNamePath = []string{c.Name, cc.Name}
 	}
 
 	return app.RunAsSubcommand(ctx)

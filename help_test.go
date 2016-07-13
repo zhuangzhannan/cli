@@ -63,14 +63,16 @@ func Test_Help_Custom_Flags(t *testing.T) {
 	}
 
 	app := App{
-		Flags: []Flag{
-			&BoolFlag{Name: "foo", Aliases: []string{"h"}},
-		},
-		Action: func(ctx *Context) error {
-			if ctx.Bool("h") != true {
-				t.Errorf("custom help flag not set")
-			}
-			return nil
+		Command: Command{
+			Flags: []Flag{
+				&BoolFlag{Name: "foo", Aliases: []string{"h"}},
+			},
+			Action: func(ctx *Context) error {
+				if ctx.Bool("h") != true {
+					t.Errorf("custom help flag not set")
+				}
+				return nil
+			},
 		},
 	}
 	output := new(bytes.Buffer)
@@ -94,14 +96,16 @@ func Test_Version_Custom_Flags(t *testing.T) {
 	}
 
 	app := App{
-		Flags: []Flag{
-			&BoolFlag{Name: "foo", Aliases: []string{"v"}},
-		},
-		Action: func(ctx *Context) error {
-			if ctx.Bool("v") != true {
-				t.Errorf("custom version flag not set")
-			}
-			return nil
+		Command: Command{
+			Flags: []Flag{
+				&BoolFlag{Name: "foo", Aliases: []string{"v"}},
+			},
+			Action: func(ctx *Context) error {
+				if ctx.Bool("v") != true {
+					t.Errorf("custom version flag not set")
+				}
+				return nil
+			},
 		},
 	}
 	output := new(bytes.Buffer)
@@ -187,12 +191,14 @@ func Test_helpSubcommand_Action_ErrorIfNoTopic(t *testing.T) {
 
 func TestShowAppHelp_CommandAliases(t *testing.T) {
 	app := &App{
-		Commands: []*Command{
-			{
-				Name:    "frobbly",
-				Aliases: []string{"fr", "frob"},
-				Action: func(ctx *Context) error {
-					return nil
+		Command: Command{
+			Subcommands: []*Command{
+				{
+					Name:    "frobbly",
+					Aliases: []string{"fr", "frob"},
+					Action: func(ctx *Context) error {
+						return nil
+					},
 				},
 			},
 		},
@@ -209,12 +215,14 @@ func TestShowAppHelp_CommandAliases(t *testing.T) {
 
 func TestShowCommandHelp_CommandAliases(t *testing.T) {
 	app := &App{
-		Commands: []*Command{
-			{
-				Name:    "frobbly",
-				Aliases: []string{"fr", "frob", "bork"},
-				Action: func(ctx *Context) error {
-					return nil
+		Command: Command{
+			Subcommands: []*Command{
+				{
+					Name:    "frobbly",
+					Aliases: []string{"fr", "frob", "bork"},
+					Action: func(ctx *Context) error {
+						return nil
+					},
 				},
 			},
 		},
@@ -235,12 +243,14 @@ func TestShowCommandHelp_CommandAliases(t *testing.T) {
 
 func TestShowSubcommandHelp_CommandAliases(t *testing.T) {
 	app := &App{
-		Commands: []*Command{
-			{
-				Name:    "frobbly",
-				Aliases: []string{"fr", "frob", "bork"},
-				Action: func(ctx *Context) error {
-					return nil
+		Command: Command{
+			Subcommands: []*Command{
+				{
+					Name:    "frobbly",
+					Aliases: []string{"fr", "frob", "bork"},
+					Action: func(ctx *Context) error {
+						return nil
+					},
 				},
 			},
 		},
@@ -257,18 +267,20 @@ func TestShowSubcommandHelp_CommandAliases(t *testing.T) {
 
 func TestShowAppHelp_HiddenCommand(t *testing.T) {
 	app := &App{
-		Commands: []*Command{
-			{
-				Name: "frobbly",
-				Action: func(ctx *Context) error {
-					return nil
+		Command: Command{
+			Subcommands: []*Command{
+				{
+					Name: "frobbly",
+					Action: func(ctx *Context) error {
+						return nil
+					},
 				},
-			},
-			{
-				Name:   "secretfrob",
-				Hidden: true,
-				Action: func(ctx *Context) error {
-					return nil
+				{
+					Name:   "secretfrob",
+					Hidden: true,
+					Action: func(ctx *Context) error {
+						return nil
+					},
 				},
 			},
 		},

@@ -47,14 +47,16 @@ func TestCommandFlagParsing(t *testing.T) {
 
 func TestCommand_Run_DoesNotOverwriteErrorFromBefore(t *testing.T) {
 	app := &App{
-		Commands: []*Command{
-			{
-				Name: "bar",
-				Before: func(c *Context) error {
-					return fmt.Errorf("before error")
-				},
-				After: func(c *Context) error {
-					return fmt.Errorf("after error")
+		Command: Command{
+			Subcommands: []*Command{
+				{
+					Name: "bar",
+					Before: func(c *Context) error {
+						return fmt.Errorf("before error")
+					},
+					After: func(c *Context) error {
+						return fmt.Errorf("after error")
+					},
 				},
 			},
 		},
@@ -75,17 +77,19 @@ func TestCommand_Run_DoesNotOverwriteErrorFromBefore(t *testing.T) {
 
 func TestCommand_OnUsageError_WithWrongFlagValue(t *testing.T) {
 	app := &App{
-		Commands: []*Command{
-			{
-				Name: "bar",
-				Flags: []Flag{
-					&IntFlag{Name: "flag"},
-				},
-				OnUsageError: func(c *Context, err error, _ bool) error {
-					if !strings.HasPrefix(err.Error(), "invalid value \"wrong\"") {
-						t.Errorf("Expect an invalid value error, but got \"%v\"", err)
-					}
-					return errors.New("intercepted: " + err.Error())
+		Command: Command{
+			Subcommands: []*Command{
+				{
+					Name: "bar",
+					Flags: []Flag{
+						&IntFlag{Name: "flag"},
+					},
+					OnUsageError: func(c *Context, err error, _ bool) error {
+						if !strings.HasPrefix(err.Error(), "invalid value \"wrong\"") {
+							t.Errorf("Expect an invalid value error, but got \"%v\"", err)
+						}
+						return errors.New("intercepted: " + err.Error())
+					},
 				},
 			},
 		},
