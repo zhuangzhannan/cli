@@ -17,8 +17,6 @@ type App struct {
 	Version string
 	// Boolean to hide built-in version flag and the VERSION section of help
 	HideVersion bool
-	// Categories contains the categorized commands and is populated on app startup
-	Categories CommandCategories
 	// Compilation date
 	Compiled time.Time
 	// List of all authors who contributed

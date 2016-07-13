@@ -21,6 +21,8 @@ type Command struct {
 	Description string
 	// A short description of the arguments of this command
 	ArgsUsage string
+	// Categories contains the categorized commands and is populated on app startup
+	Categories CommandCategories
 	// The category the command is part of
 	Category string
 	// Boolean to enable bash completion commands
