@@ -2,9 +2,13 @@ package cli
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 )
 
 // Command is a subcommand for a cli.App.
@@ -55,6 +59,101 @@ type Command struct {
 	// Full name of command for help, defaults to full command name, including parent commands.
 	HelpName        string
 	commandNamePath []string
+
+	// Version of program
+	Version string
+	// Boolean to hide built-in version flag and the VERSION section of help
+	HideVersion bool
+	// Compilation date
+	Compiled time.Time
+	// List of all authors who contributed
+	Authors []*Author
+	// Copyright of the binary if any
+	Copyright string
+	// Writer writer to write output to
+	Writer io.Writer
+	// ErrWriter writes error output
+	ErrWriter io.Writer
+	// Other custom info
+	Metadata map[string]interface{}
+
+	Command
+
+	didSetup bool
+}
+
+// Setup runs initialization code to ensure all data structures are ready for
+// `Run` or inspection prior to `Run`.  It is internally called by `Run`, but
+// will return early if setup has already happened.
+func (c *Command) Setup() {
+	if c.didSetup {
+		return
+	}
+
+	c.didSetup = true
+
+	if c.Name == "" {
+		c.Name = filepath.Base(os.Args[0])
+	}
+
+	if c.HelpName == "" {
+		c.HelpName = filepath.Base(os.Args[0])
+	}
+
+	if c.Usage == "" {
+		c.Usage = "A new cli application"
+	}
+
+	if c.Version == "" {
+		c.Version = "0.0.0"
+	}
+
+	if c.BashComplete == nil {
+		c.BashComplete = DefaultAppComplete
+	}
+
+	if c.Action == nil {
+		c.Action = helpCommand.Action
+	}
+
+	if c.Compiled == (time.Time{}) {
+		c.Compiled = compileTime()
+	}
+
+	if c.Writer == nil {
+		c.Writer = os.Stdout
+	}
+
+	newCmds := []*Command{}
+	for _, c := range c.Subcommands {
+		if c.HelpName == "" {
+			c.HelpName = fmt.Sprintf("%s %s", c.HelpName, c.Name)
+		}
+		newCmds = append(newCmds, c)
+	}
+	c.Subcommands = newCmds
+
+	if c.Subcommand(helpCommand.Name) == nil && !c.HideHelp {
+		c.appendCommand(helpCommand)
+
+		if HelpFlag != nil {
+			c.appendFlag(HelpFlag)
+		}
+	}
+
+	if c.EnableBashCompletion {
+		c.appendFlag(BashCompletionFlag)
+	}
+
+	if !c.HideVersion {
+		c.appendFlag(VersionFlag)
+	}
+
+	c.Categories = newCommandCategories()
+	for _, command := range c.Subcommands {
+		c.Categories.AddCommand(command.Category, command)
+	}
+	sort.Sort(c.Categories.(*commandCategories))
 }
 
 // FullName returns the full name of the command.

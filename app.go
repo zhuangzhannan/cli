@@ -5,35 +5,9 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"reflect"
-	"sort"
 	"time"
 )
-
-// App is the main structure of a cli application.
-type App struct {
-	// Description of the program.
-	Version string
-	// Boolean to hide built-in version flag and the VERSION section of help
-	HideVersion bool
-	// Compilation date
-	Compiled time.Time
-	// List of all authors who contributed
-	Authors []*Author
-	// Copyright of the binary if any
-	Copyright string
-	// Writer writer to write output to
-	Writer io.Writer
-	// ErrWriter writes error output
-	ErrWriter io.Writer
-	// Other custom info
-	Metadata map[string]interface{}
-
-	Command
-
-	didSetup bool
-}
 
 // Tries to find out when this binary was compiled.
 // Returns the current time if it fails to find it.
@@ -43,80 +17,6 @@ func compileTime() time.Time {
 		return time.Now()
 	}
 	return info.ModTime()
-}
-
-// Setup runs initialization code to ensure all data structures are ready for
-// `Run` or inspection prior to `Run`.  It is internally called by `Run`, but
-// will return early if setup has already happened.
-func (a *App) Setup() {
-	if a.didSetup {
-		return
-	}
-
-	a.didSetup = true
-
-	if a.Name == "" {
-		a.Name = filepath.Base(os.Args[0])
-	}
-
-	if a.HelpName == "" {
-		a.HelpName = filepath.Base(os.Args[0])
-	}
-
-	if a.Usage == "" {
-		a.Usage = "A new cli application"
-	}
-
-	if a.Version == "" {
-		a.Version = "0.0.0"
-	}
-
-	if a.BashComplete == nil {
-		a.BashComplete = DefaultAppComplete
-	}
-
-	if a.Action == nil {
-		a.Action = helpCommand.Action
-	}
-
-	if a.Compiled == (time.Time{}) {
-		a.Compiled = compileTime()
-	}
-
-	if a.Writer == nil {
-		a.Writer = os.Stdout
-	}
-
-	newCmds := []*Command{}
-	for _, c := range a.Subcommands {
-		if c.HelpName == "" {
-			c.HelpName = fmt.Sprintf("%s %s", a.HelpName, c.Name)
-		}
-		newCmds = append(newCmds, c)
-	}
-	a.Subcommands = newCmds
-
-	if a.Subcommand(helpCommand.Name) == nil && !a.HideHelp {
-		a.appendCommand(helpCommand)
-
-		if HelpFlag != nil {
-			a.appendFlag(HelpFlag)
-		}
-	}
-
-	if a.EnableBashCompletion {
-		a.appendFlag(BashCompletionFlag)
-	}
-
-	if !a.HideVersion {
-		a.appendFlag(VersionFlag)
-	}
-
-	a.Categories = newCommandCategories()
-	for _, command := range a.Subcommands {
-		a.Categories.AddCommand(command.Category, command)
-	}
-	sort.Sort(a.Categories.(*commandCategories))
 }
 
 // Run is the entry point to the cli app. Parses the arguments slice and routes
