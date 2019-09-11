@@ -154,7 +154,7 @@ func GfmrunActionFunc(_ *cli.Context) error {
 }
 
 func TocActionFunc(_ *cli.Context) error {
-	err := runCmd("node_modules/.bin/markdown-toc", "-i", "README.md")
+	err := runCmd("markdown-toc", "-ics", "README.md")
 	if err != nil {
 		return err
 	}
